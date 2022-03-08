@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: jwilder/nginx-proxy
+    container_name: labo-nginx
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      kevin-network:
+  mongodb:
+    image: mongo:latest
+    container_name: labo-mongodb
+    hostname: mongodb
+    volumes:
+        - ./mongodb/init/:/docker-entrypoint-initdb.d/:ro
+        - ./mongodb/data/db/:/data/db/
+        - ./mongodb/data/log/:/var/log/mongodb/
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: test
+        MONGO_INITDB_DATABASE: test
+    ports:
+        - "28017:28017"
+    command: mongod --port 28017
+    networks:
+      kevin-network:
+  server1:
+    build: ./server1
+    container_name: labo-server1
+    environment:
+      - REDIS_SERVER_IP=redis-server
+      - VIRTUAL_HOST=api.server1.net
+      - VIRTUAL_PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    networks:
+      kevin-network:
+networks:
+  kevin-network:
