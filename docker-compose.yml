@@ -12,23 +12,116 @@ services:
       - "443:443"
     networks:
       kevin-network:
-  mongodb:
+  mongodb1:
     image: mongo:latest
-    container_name: labo-mongodb
-    hostname: mongodb
+    container_name: labo-mongodb1
+    hostname: mongodb1
     volumes:
         - ./mongodb/init/:/docker-entrypoint-initdb.d/:ro
-        - ./mongodb/data/db/:/data/db/
-        - ./mongodb/data/log/:/var/log/mongodb/
+        - ./mongodb/data1/db/:/data/db/
+        - ./mongodb/data1/log/:/var/log/mongodb/
+    expose:
+      - "28017"
     environment:
         MONGO_INITDB_ROOT_USERNAME: admin
         MONGO_INITDB_ROOT_PASSWORD: test
         MONGO_INITDB_DATABASE: test
     ports:
-        - "28017:28017"
-    command: mongod --port 28017
+        - "28019:28017"
+    command: mongod --shardsvr --replSet mongors1 --port 28017
     networks:
       kevin-network:
+  mongodb2:
+    image: mongo:latest
+    container_name: labo-mongodb2
+    hostname: mongodb2
+    volumes:
+        - ./mongodb/init/:/docker-entrypoint-initdb.d/:ro
+        - ./mongodb/data2/db/:/data/db/
+        - ./mongodb/data2/log/:/var/log/mongodb/
+    expose:
+      - "28017"
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: admin
+        MONGO_INITDB_ROOT_PASSWORD: test
+        MONGO_INITDB_DATABASE: test
+    ports:
+        - "28020:28017"
+    command: mongod --shardsvr --replSet mongors1 --port 28017
+    networks:
+      kevin-network:
+  mongorsn1:
+    container_name: mongors1n1
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 28017
+    ports:
+      - 28017:28017
+    expose:
+      - "28017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/data1:/data/db
+  mongors1n2:
+    container_name: mongors1n2
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 28017
+    ports:
+      - 28027:28017
+    expose:
+      - "28017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/data2:/data/db
+  mongors1n3:
+    container_name: mongors1n3
+    image: mongo
+    command: mongod --shardsvr --replSet mongors1 --dbpath /data/db --port 28017
+    ports:
+      - 28037:28017
+    expose:
+      - "28017"
+    environment:
+      TERM: xterm
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/data3:/data/db
+  mongocfg1:
+    container_name: mongocfg1
+    image: mongo:latest
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 28017
+    environment:
+      TERM: xterm
+    expose:
+      - "28017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/config1:/data/db
+  mongocfg2:
+    container_name: mongocfg2
+    image: mongo:latest
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 28017
+    environment:
+      TERM: xterm
+    expose:
+      - "28017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/config2:/data/db
+  mongocfg3:
+    container_name: mongocfg3
+    image: mongo:latest
+    command: mongod --configsvr --replSet mongors1conf --dbpath /data/db --port 28017
+    environment:
+      TERM: xterm
+    expose:
+      - "28017"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /mongo_cluster/config3:/data/db
   server1:
     build: ./server1
     container_name: labo-server1
@@ -39,7 +132,8 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - mongodb
+      - mongodb1
+      - mongodb2
     networks:
       kevin-network:
 networks:

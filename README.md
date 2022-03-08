@@ -1,4 +1,6 @@
-# TEMPLATE-DOCKER-NGINX
+# LABORATORY-MONGODB-SHARDING
+
+https://dzone.com/articles/composing-a-sharded-mongodb-on-docker
 
 ## Description
 
