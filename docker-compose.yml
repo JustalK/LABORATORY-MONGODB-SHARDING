@@ -23,98 +23,64 @@ services:
         - ./mongodb/init/:/docker-entrypoint-initdb.d/:ro
         - ./mongodb/data1/db/:/data/db/
         - ./mongodb/data1/log/:/var/log/mongodb/
+        - ./mongodb/scripts:/scripts
     environment:
         MONGO_INITDB_ROOT_USERNAME: admin
         MONGO_INITDB_ROOT_PASSWORD: test
         MONGO_INITDB_DATABASE: test
     ports:
-        - "28019:28017"
-    command: mongos --port 28017 --configdb shard-config-server/mongocfg1:28017,mongocfg2:28017,mongocfg3:28017 --bind_ip_all
+        - "28017:27017"
+    command: mongos --port 27017 --configdb configserver/config01:27017,config02:27017 --bind_ip_all
     networks:
       kevin-network:
-  mongodb2:
+
+## Config Server
+
+  config01:
     image: mongo:latest
-    container_name: labo-mongodb2
-    hostname: mongodb2
+    command: mongod --port 27017 --configsvr --replSet configserver
     volumes:
-        - ./mongodb/init/:/docker-entrypoint-initdb.d/:ro
-        - ./mongodb/data2/db/:/data/db/
-        - ./mongodb/data2/log/:/var/log/mongodb/
-    environment:
-        MONGO_INITDB_ROOT_USERNAME: admin
-        MONGO_INITDB_ROOT_PASSWORD: test
-        MONGO_INITDB_DATABASE: test
-    ports:
-        - "28020:28017"
-    command: mongos --port 28017 --configdb shard-config-server/mongocfg1:28017,mongocfg2:28017,mongocfg3:28017 --bind_ip_all
-    links:
-      - mongodb1
+      - ./mongodb/scripts:/scripts
+    networks:
+      kevin-network:
+  config02:
+    image: mongo:latest
+    command: mongod --port 27017 --configsvr --replSet configserver
+    volumes:
+      - ./mongodb/scripts:/scripts
     networks:
       kevin-network:
 
 ## Shards
 
-  mongorsn1:
-    container_name: mongors1n1
+  shard01a:
     image: mongo:latest
-    command: mongod --shardsvr --replSet shard-1 --port 28017
-    ports:
-      - 28101:28017
+    command: mongod --port 27018 --shardsvr --replSet shard01
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/data1:/data/db
-  mongors1n2:
-    container_name: mongors1n2
+      - ./mongodb/scripts:/scripts
+    networks:
+      kevin-network:
+  shard01b:
     image: mongo:latest
-    command: mongod --shardsvr --replSet shard-1 --port 28017
-    ports:
-      - 28102:28017
+    command: mongod --port 27018 --shardsvr --replSet shard01
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/data2:/data/db
-  mongors1n3:
-    container_name: mongors1n3
+      - ./mongodb/scripts:/scripts
+    networks:
+      kevin-network:
+  shard02a:
     image: mongo:latest
-    command: mongod --shardsvr --replSet shard-1 --port 28017
-    ports:
-      - 28103:28017
+    command: mongod --port 27019 --shardsvr --replSet shard02
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/data3:/data/db
-
-## Config Server
-
-  mongocfg1:
-    container_name: mongocfg1
+      - ./mongodb/scripts:/scripts
+    networks:
+      kevin-network:
+  shard02b:
     image: mongo:latest
-    command: mongod --port 28017 --configsvr --replSet shard-config-server
-    ports:
-      - 28201:28017
+    command: mongod --port 27019 --shardsvr --replSet shard02
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/config1:/data/db
-    links:
-      - mongorsn1
-      - mongors1n2
-      - mongors1n3
-  mongocfg2:
-    container_name: mongocfg2
-    image: mongo:latest
-    command: mongod --port 28017 --configsvr --replSet shard-config-server
-    ports:
-      - 28202:28017
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/config2:/data/db
-  mongocfg3:
-    container_name: mongocfg3
-    image: mongo:latest
-    command: mongod --port 28017 --configsvr --replSet shard-config-server
-    ports:
-      - 28203:28017
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /mongo_cluster/config3:/data/db
+      - ./mongodb/scripts:/scripts
+    networks:
+      kevin-network:
 
 
   server1:
@@ -128,7 +94,6 @@ services:
       - "3000:3000"
     depends_on:
       - mongodb1
-      - mongodb2
     networks:
       kevin-network:
 networks:

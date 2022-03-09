@@ -12,7 +12,10 @@
   "devDependencies": {},
   "scripts": {
     "start": "docker-compose up -d --build",
-    "stop": "docker-compose down"
+    "init": "sh init.sh",
+    "status": "docker-compose exec mongodb1 mongo",
+    "stop": "docker-compose down",
+    "reset": "docker-compose rm"
   },
   "repository": {
     "type": "git",
