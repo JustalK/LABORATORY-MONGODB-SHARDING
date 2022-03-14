@@ -87,7 +87,6 @@ services:
     build: ./server1
     container_name: labo-server1
     environment:
-      - REDIS_SERVER_IP=redis-server
       - VIRTUAL_HOST=api.server1.net
       - VIRTUAL_PORT=3000
     ports:
